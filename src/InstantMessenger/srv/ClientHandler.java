@@ -8,6 +8,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.logging.Level;
 
 public class ClientHandler {
     private MyServer myServer;
@@ -40,13 +41,13 @@ public class ClientHandler {
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e) {
-            e.printStackTrace();
+            myServer.log().log(Level.SEVERE,"Client handler exception:",e);
         }
     }
 
     public static ClientHandler createAndStart(MyServer myServer, Socket socket) {
         ClientHandler clientHandler = new ClientHandler(myServer, socket);
-        new Thread(clientHandler::start).start();
+        myServer.getExecutorService().submit(() -> clientHandler.start());
         return clientHandler;
     }
 
@@ -59,7 +60,7 @@ public class ClientHandler {
             closeConnection();
         } catch (IOException | InterruptedException e) {
             closeConnection();
-            e.printStackTrace();
+            myServer.log().log(Level.SEVERE,"Client handler exception:",e);
         }
     }
 
@@ -71,7 +72,7 @@ public class ClientHandler {
             e.printStackTrace();
         }
         myServer.Logoff(this);
-        System.out.println(getNick() + " left the chat");
+        myServer.log().info(getNick() + " left the chat");
         myServer.broadcast(myServer.getName(), MessageType.TECHNICAL,getNick() + " left the chat");
     }
 
